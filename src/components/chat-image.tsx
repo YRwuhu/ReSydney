@@ -49,6 +49,10 @@ export function ChatImage({ children, uploadImage }: React.PropsWithChildren<Cha
         upload(fileDataUrl)
       }
     }
+    // 重置，便于同一文件再次选择（否则 onChange 不触发）
+    if (fileRef.current) {
+      fileRef.current.value = ''
+    }
   }, [])
 
   const onPaste = useCallback((event: ClipboardEvent<HTMLInputElement>) => {

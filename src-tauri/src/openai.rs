@@ -1,6 +1,7 @@
 //! OpenAI 兼容接口：非流式辅助调用 + 流式主回答（SSE）。
 //! 由 TS 版 src/lib/bots/openai/index.ts 移植，逻辑在前端 Command 层复用。
 
+use futures_util::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -94,6 +95,7 @@ pub async fn complete_once(req: &OpenAIRequest) -> Result<String, String> {
 }
 
 /// 逐帧解析 SSE data 行，回调 (data_text)。
+/// 使用真正流式读取（bytes_stream），逐 chunk 处理；每条完整 `data:` 行触发一次 on_event。
 pub async fn stream_sse(
     req: &OpenAIRequest,
     mut on_event: impl FnMut(&str),
@@ -123,23 +125,35 @@ pub async fn stream_sse(
         let detail = resp.text().await.unwrap_or_default();
         return Err(format!("接口请求失败 ({}): {}", status, detail));
     }
-    let bytes = resp
-        .bytes()
-        .await
-        .map_err(|e| e.to_string())?;
-    let text = String::from_utf8_lossy(&bytes).to_string();
-    // SSE：每行形如 `data: {...}` 或 `data: [DONE]`，逐行解析即可
-    // （OpenAI 兼容接口把 content 内的换行内联进单行 JSON，不跨 data 行）。
-    for line in text.lines() {
-        let trimmed = line.trim();
-        if !trimmed.starts_with("data:") {
-            continue;
+
+    let mut stream = resp.bytes_stream();
+    let mut buf = String::new();
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk.map_err(|e| e.to_string())?;
+        buf.push_str(&String::from_utf8_lossy(&chunk));
+
+        // 逐行处理已完整的数据行（SSE 每行以 \n 结尾）
+        while let Some(idx) = buf.find('\n') {
+            let line = buf[..idx].trim_end_matches('\r').to_string();
+            buf.drain(..=idx);
+
+            let trimmed = line.trim();
+            if !trimmed.starts_with("data:") {
+                continue;
+            }
+            let data_str = trimmed[5..].trim();
+            if data_str.is_empty() || data_str == "[DONE]" {
+                continue;
+            }
+            on_event(data_str);
         }
-        let data_str = trimmed[5..].trim();
-        if data_str.is_empty() || data_str == "[DONE]" {
-            continue;
+    }
+    // 处理可能残留的最后一行（无换行结尾）
+    let tail = buf.trim();
+    if let Some(data_str) = tail.strip_prefix("data:").map(|s| s.trim()) {
+        if !data_str.is_empty() && data_str != "[DONE]" {
+            on_event(data_str);
         }
-        on_event(data_str);
     }
     Ok(())
 }
