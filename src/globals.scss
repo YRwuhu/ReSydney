@@ -389,7 +389,8 @@
 }
 
 body {
-  background: var(--cib-color-background-surface-app-primary);
+  /* 背景交给 .global-background（fixed 全屏层）呈现，避免 body 白色盖住主题色 */
+  background: transparent;
 }
 
 /* 深色模式：通过 dark.scss 中的 .dark 变量覆盖启用（右上角月亮/太阳按钮切换） */

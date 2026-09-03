@@ -15,6 +15,16 @@
       html.dark body {
         background: #11100f;
       }
+      /* 无已存主题时的系统偏好兜底（与预判脚本一致；显式 light/dark 时由类名覆盖） */
+      @media (prefers-color-scheme: dark) {
+        html:not(.light):not(.dark),
+        html:not(.light):not(.dark) body {
+          background: #11100f;
+        }
+        html:not(.light):not(.dark) #launch-mask {
+          background: #11100f;
+        }
+      }
       #launch-mask {
         position: fixed;
         inset: 0;
@@ -27,11 +37,10 @@
       html.dark #launch-mask {
         background: #11100f;
       }
+      /* 图标直接展示，不加圆角框/阴影 */
       #launch-mask img {
         width: 96px;
         height: 96px;
-        border-radius: 24px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
         animation: launch-pulse 1.8s ease-in-out infinite;
       }
       @keyframes launch-pulse {
@@ -56,16 +65,25 @@
       // next-themes 将主题存于 localStorage['theme']（light | dark | system）；
       // 这里只做预判，React 挂载后由 next-themes 接管，二者结果一致不会跳变。
       (function () {
+        function isSystemDark() {
+          try {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches
+          } catch (e) {
+            return false
+          }
+        }
+        var html = document.documentElement
+        var dark = isSystemDark()
         try {
           var theme = localStorage.getItem('theme')
-          var dark =
-            theme === 'dark' ||
-            (theme === 'system' &&
-              window.matchMedia('(prefers-color-scheme: dark)').matches)
-          if (dark) document.documentElement.classList.add('dark')
+          if (theme === 'dark') dark = true
+          else if (theme === 'light') dark = false
+          else if (theme === 'system') dark = isSystemDark()
+          // 无已存主题：跟随系统（与上面 CSS 兜底一致）
         } catch (e) {
-          /* 隐私模式等读取失败时按浅色处理 */
+          // localStorage 不可用（隐私模式/部分 WebView 环境）：保持系统偏好
         }
+        html.classList.add(dark ? 'dark' : 'light')
         // 应用就绪后由 main.tsx 调用移除；附超时兜底，防止异常时遮罩一直挡住界面
         var dismissed = false
         window.__dismissLaunchMask = function () {
