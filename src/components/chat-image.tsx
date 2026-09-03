@@ -11,7 +11,7 @@ import {
 } from "react"
 import { toast } from "react-hot-toast"
 import { SVG } from "./ui/svg"
-import PasteIcon from '@/assets/images/paste.svg'
+import PasteIcon from '@/assets/images/paste.svg?react'
 import UploadIcon from '@/assets/images/upload.svg'
 import CameraIcon from '@/assets/images/camera.svg'
 import { BingReturnType } from '@/lib/hooks/use-bing'
@@ -28,6 +28,7 @@ export function ChatImage({ children, uploadImage }: React.PropsWithChildren<Cha
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const mediaStream = useRef<MediaStream>()
   const [panel, setPanel] = useState('none')
 
@@ -95,7 +96,11 @@ export function ChatImage({ children, uploadImage }: React.PropsWithChildren<Cha
   }
 
   useEffect(() => {
-    const handleBlur = () => {
+    const handleBlur = (event: MouseEvent) => {
+      // 点击面板内部（含触发图标）不关闭，仅点击外部区域关闭
+      if (containerRef.current?.contains(event.target as Node)) {
+        return
+      }
       if (panel !== 'none') {
         setPanel('none')
       }
@@ -126,15 +131,21 @@ export function ChatImage({ children, uploadImage }: React.PropsWithChildren<Cha
   }, [panel])
 
   return (
-    <div className="visual-search-container">
-      <div onClick={() => panel === 'none' ? setPanel('normal') : setPanel('none')}>{children}</div>
+    <div className="visual-search-container" ref={containerRef}>
+      <div
+        onClick={(e) => {
+          e.stopPropagation()
+          e.nativeEvent.stopImmediatePropagation()
+          setPanel(panel === 'none' ? 'normal' : 'none')
+        }}
+      >{children}</div>
       <div className={cn('visual-search', panel)} onClick={preventDefault}>
         <div className="normal-content">
           <div className="header">
             <h4>添加图像</h4>
           </div>
           <div className="paste">
-            <SVG alt="paste" src={PasteIcon} width={24} />
+            <PasteIcon width={24} height={24} fill="var(--cib-color-foreground-neutral-secondary)" />
             <form onSubmitCapture={onEnter}>
               <input
                 className="paste-input"
