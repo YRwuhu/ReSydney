@@ -1,0 +1,25 @@
+# Node
+node_modules/
+dist/
+
+# Rust
+src-tauri/target/
+src-tauri/gen/
+
+# Tauri build output
+src-tauri/release/
+src-tauri/target-release/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local env / secrets
+.env
+.env.local
