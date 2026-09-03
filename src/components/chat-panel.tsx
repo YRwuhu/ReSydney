@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, KeyboardEvent } from 'react'
+import React, { useCallback, useEffect, KeyboardEvent, ClipboardEvent } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useAtomValue } from 'jotai'
 import { cn } from '@/lib/utils'
@@ -99,6 +99,32 @@ export function ChatPanel({
     inputRef.current?.focus()
   }, [tid])
 
+  // 支持「在别处复制图片后直接粘贴上传」：剪贴板含图片时转为附件上传
+  const handlePaste = useCallback((event: ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = event.clipboardData?.items
+    if (!items) {
+      return
+    }
+    for (const item of Array.from(items)) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        event.preventDefault()
+        const file = item.getAsFile()
+        if (!file) {
+          continue
+        }
+        const reader = new FileReader()
+        reader.onload = () => {
+          const dataUrl = reader.result as string
+          if (dataUrl) {
+            uploadImage(dataUrl)
+          }
+        }
+        reader.readAsDataURL(file)
+        break
+      }
+    }
+  }, [uploadImage])
+
   useEffect(() => {
     if (input) {
       setFocus()
@@ -137,6 +163,7 @@ export function ChatPanel({
                 ref={inputRef}
                 tabIndex={0}
                 onKeyDown={onSubmit}
+                onPaste={handlePaste}
                 rows={1}
                 value={input}
                 onChange={e => setInput(e.target.value.slice(0, 8000))}

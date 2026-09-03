@@ -1691,6 +1691,7 @@ button {
   flex-wrap: wrap;
   gap: 8px;
   margin-block: 16px;
+  padding-bottom: 40px; /* 为绝对定位的 .bottom-bar 预留空间，避免预览图遮挡左侧上传按钮 */
   overflow: hidden;
 
   .file-item {
