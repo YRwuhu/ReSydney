@@ -5,7 +5,7 @@ import Textarea from 'react-textarea-autosize'
 import { useAtomValue } from 'jotai'
 import { cn } from '@/lib/utils'
 
-import NewTopic from '@/assets/images/new-topic.svg'
+import NewTopic from '@/assets/images/new-topic.svg?react'
 import VisualSearchIcon from '@/assets/images/visual-search.svg'
 import SendFillIcon from '@/assets/images/send-fill.svg'
 import SendIcon from '@/assets/images/send.svg'
@@ -117,7 +117,7 @@ export function ChatPanel({
             <div className="button-compose-wrapper">
               <button className="body-2 button-compose" type="button" aria-label="新主题" onClick={resetConversation}>
                 <div className="button-compose-content">
-                  <SVG className="pl-2" alt="new topic" src={NewTopic} width={40} fill="var(--cib-color-foreground-on-accent-primary)" />
+                  <NewTopic className="pl-2" width={40} fill="var(--cib-color-foreground-on-accent-primary)" />
                   <div className="button-compose-text">新主题</div>
                 </div>
               </button>

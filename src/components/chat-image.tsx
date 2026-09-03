@@ -55,6 +55,13 @@ export function ChatImage({ children, uploadImage }: React.PropsWithChildren<Cha
     }
   }, [])
 
+  // 显式点击隐藏的文件框：确保按钮任何情况下都能打开文件选择器
+  const openFilePicker = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    fileRef.current?.click()
+  }, [])
+
   const onPaste = useCallback((event: ClipboardEvent<HTMLInputElement>) => {
     const pasteUrl = event.clipboardData.getData('text') ?? ''
     upload(pasteUrl)
@@ -145,7 +152,7 @@ export function ChatImage({ children, uploadImage }: React.PropsWithChildren<Cha
             </form>
           </div>
           <div className="buttons">
-            <button type="button" aria-label="从此设备上传">
+            <button type="button" aria-label="从此设备上传" onClick={openFilePicker}>
               <input
                 ref={fileRef}
                 className="fileinput"
