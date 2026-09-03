@@ -44,22 +44,19 @@ export function ChatImage({ children, uploadImage }: React.PropsWithChildren<Cha
   const onUpload = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      const fileDataUrl = await ImageUtils.getCompressedImageDataAsync(file)
-      if (fileDataUrl) {
-        upload(fileDataUrl)
+      try {
+        const fileDataUrl = await ImageUtils.getCompressedImageDataAsync(file)
+        if (fileDataUrl) {
+          upload(fileDataUrl)
+        }
+      } catch {
+        toast.error('无法读取该图片，请换一张试试')
       }
     }
     // 重置，便于同一文件再次选择（否则 onChange 不触发）
     if (fileRef.current) {
       fileRef.current.value = ''
     }
-  }, [])
-
-  // 显式点击隐藏的文件框：确保按钮任何情况下都能打开文件选择器
-  const openFilePicker = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault()
-    event.stopPropagation()
-    fileRef.current?.click()
   }, [])
 
   const onPaste = useCallback((event: ClipboardEvent<HTMLInputElement>) => {
@@ -152,7 +149,7 @@ export function ChatImage({ children, uploadImage }: React.PropsWithChildren<Cha
             </form>
           </div>
           <div className="buttons">
-            <button type="button" aria-label="从此设备上传" onClick={openFilePicker}>
+            <label className="upload-row" aria-label="从此设备上传">
               <input
                 ref={fileRef}
                 className="fileinput"
@@ -160,9 +157,9 @@ export function ChatImage({ children, uploadImage }: React.PropsWithChildren<Cha
                 accept="image/gif, image/jpeg, image/png, image/webp"
                 onChange={onUpload}
               />
-              <SVG alt="uplaod" src={UploadIcon} width={20} />
-              从此设备上传
-            </button>
+              <SVG alt="upload" src={UploadIcon} width={20} />
+              <span>从此设备上传</span>
+            </label>
             <button type="button" aria-label="拍照" onClick={openVideo}>
               <SVG alt="camera" src={CameraIcon} width={20} />
               拍照

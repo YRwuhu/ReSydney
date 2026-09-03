@@ -6,6 +6,7 @@ import { chatFamily, bingConversationStyleAtom, hashAtom, voiceAtom, chatHistory
 import { ChatMessageModel, BotId, FileItem } from '@/lib/bots/bing/types'
 import { saveChat as apiSaveChat, blobGateway, listChats } from '@/lib/bridge'
 import { readBingSession } from '@/lib/bots/bing/session'
+import { toast } from 'react-hot-toast'
 import { nanoid } from '@/lib/utils'
 import { TTS } from '@/lib/bots/bing/tts'
 
@@ -179,10 +180,17 @@ export function useBing(botId: BotId = 'bing') {
           setAttachmentList([{ url: `data:image/jpeg;base64,${b64}`, status: 'loaded', bcid }])
         } catch {
           setAttachmentList([{ url: imgUrl, status: 'error' }])
+          toast.error('图片上传失败：无法解析返回的图片数据')
         }
       }
     } else {
       setAttachmentList([{ url: imgUrl, status: 'error' }])
+      const session = readBingSession()
+      if (!session.bing_header) {
+        toast.error('图片上传需要先配置 Bing 凭证（设置页填入对谈令牌）')
+      } else {
+        toast.error('图片上传失败，请检查 Bing 凭证是否有效')
+      }
     }
   }, [chatState.bot])
 
