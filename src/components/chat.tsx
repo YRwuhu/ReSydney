@@ -12,8 +12,7 @@ import { ChatHeader } from './chat-header'
 import { ChatSuggestions } from './chat-suggestions'
 import { bingConversationStyleAtom } from '@/state'
 import { ButtonScrollToBottom } from '@/components/button-scroll-to-bottom'
-import { SVG } from './ui/svg'
-import StopIcon from '@/assets/images/stop.svg'
+import StopIcon from '@/assets/images/stop.svg?react'
 import { useBing } from '@/lib/hooks/use-bing'
 import { ChatMessageModel } from '@/lib/bots/bing/types'
 import { ChatNotification } from './chat-notification'
@@ -86,7 +85,7 @@ export default function Chat({ className }: ChatProps) {
                       onClick={stopGenerating}
                       className="typing-control-item stop"
                     >
-                      <SVG alt="stop" src={StopIcon} width={24} className="mr-1" />
+                      <StopIcon width={24} className="mr-1" fill="var(--cib-color-foreground-accent-primary)" />
                       <span>停止响应</span>
                     </button>
                   </div>

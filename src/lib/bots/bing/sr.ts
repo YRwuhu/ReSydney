@@ -1,3 +1,26 @@
+// 浏览器语音识别 API 的本地类型声明（当前 TS DOM 库不含），仅用于类型检查
+declare class SpeechRecognition {
+  continuous: boolean
+  lang: string
+  onresult: ((event: SpeechRecognitionEvent) => void) | null
+  onerror: ((event: { error: string }) => void) | null
+  onend: (() => void) | null
+  onstart: ((...args: unknown[]) => void) | null
+  start(): void
+  stop(): void
+  abort(): void
+}
+declare var webkitSpeechRecognition: typeof SpeechRecognition
+declare global {
+  interface Window {
+    SpeechRecognition?: typeof SpeechRecognition
+    webkitSpeechRecognition?: typeof SpeechRecognition
+    mozSpeechRecognition?: typeof SpeechRecognition
+    msSpeechRecognition?: typeof SpeechRecognition
+    oSpeechRecognition?: typeof SpeechRecognition
+  }
+}
+
 // @ts-ignore
 const SpeechRecognitionPolyfill: typeof webkitSpeechRecognition = typeof window !== 'undefined' ? (
   // @ts-ignore

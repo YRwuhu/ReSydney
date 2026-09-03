@@ -10,10 +10,9 @@ import {
   FormEvent
 } from "react"
 import { toast } from "react-hot-toast"
-import { SVG } from "./ui/svg"
 import PasteIcon from '@/assets/images/paste.svg?react'
-import UploadIcon from '@/assets/images/upload.svg'
-import CameraIcon from '@/assets/images/camera.svg'
+import UploadIcon from '@/assets/images/upload.svg?react'
+import CameraIcon from '@/assets/images/camera.svg?react'
 import { BingReturnType } from '@/lib/hooks/use-bing'
 import { cn } from '@/lib/utils'
 import { ImageUtils } from "@/lib/image"
@@ -168,11 +167,11 @@ export function ChatImage({ children, uploadImage }: React.PropsWithChildren<Cha
                 accept="image/gif, image/jpeg, image/png, image/webp"
                 onChange={onUpload}
               />
-              <SVG alt="upload" src={UploadIcon} width={20} />
+              <UploadIcon aria-label="upload" width={20} fill="var(--cib-color-foreground-neutral-primary)" />
               <span>从此设备上传</span>
             </label>
             <button type="button" aria-label="拍照" onClick={openVideo}>
-              <SVG alt="camera" src={CameraIcon} width={20} />
+              <CameraIcon aria-label="camera" width={20} fill="var(--cib-color-foreground-neutral-primary)" />
               拍照
             </button>
           </div>

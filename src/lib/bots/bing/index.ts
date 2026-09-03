@@ -7,6 +7,7 @@ import {
   type BingConversation as BridgeConversation,
 } from '@/lib/bridge'
 import { readBingSession } from './session'
+import { extractDrawPrompt, runDrawTool } from './draw'
 
 type Params = SendMessageParams<{ bingConversationStyle: BingConversationStyle, conversation: Partial<ConversationInfoBase> }>
 
@@ -110,6 +111,15 @@ export class BingWebBot implements ChatBot {
   }
 
   async sendMessage(params: Params) {
+    // AI 画图工具：输入表达"画图"意图时直接生成图片，不走聊天会话（带附件时不劫持）
+    const drawPrompt = extractDrawPrompt(params.prompt)
+    if (drawPrompt && !params.imageUrl) {
+      return runDrawTool({
+        prompt: drawPrompt,
+        signal: params.signal,
+        onEvent: params.onEvent,
+      })
+    }
     try {
       await this.createContext(params.options.bingConversationStyle, params.options.conversation as ConversationInfoBase)
       Object.assign(this.conversationContext!, { prompt: params.prompt, imageUrl: params.imageUrl })

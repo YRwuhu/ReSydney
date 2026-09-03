@@ -66,7 +66,11 @@ function Bootstrap({ children }: { children: React.ReactNode }) {
       } catch {
         // 库不可用（首次运行等）时忽略，继续用默认空状态
       } finally {
-        if (!cancelled) setReady(true)
+        if (!cancelled) {
+          setReady(true)
+          // 应用已就绪，移除启动遮罩（index.html 中定义，淡出后自删）
+          ;(window as Window & { __dismissLaunchMask?: () => void }).__dismissLaunchMask?.()
+        }
       }
     })()
     return () => { cancelled = true }

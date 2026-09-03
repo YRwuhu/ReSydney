@@ -6,16 +6,15 @@ import { useAtomValue } from 'jotai'
 import { cn } from '@/lib/utils'
 
 import NewTopic from '@/assets/images/new-topic.svg?react'
-import VisualSearchIcon from '@/assets/images/visual-search.svg'
-import SendFillIcon from '@/assets/images/send-fill.svg'
-import SendIcon from '@/assets/images/send.svg'
+import VisualSearchIcon from '@/assets/images/visual-search.svg?react'
+import SendFillIcon from '@/assets/images/send-fill.svg?react'
+import SendIcon from '@/assets/images/send.svg?react'
 
 import { BingReturnType } from '@/lib/hooks/use-bing'
 import { voiceListenAtom } from '@/state'
 import Voice from './voice'
 import { ChatImage } from './chat-image'
 import { ChatAttachments } from './chat-attachments'
-import { SVG } from './ui/svg'
 import { ChatPrompts } from './chat-prompts'
 import { debug } from '@/lib/isomorphic'
 
@@ -154,7 +153,7 @@ export function ChatPanel({
             onClick={setFocus}
             onBlur={setBlur}
           >
-            {input.startsWith('/') && (
+            {input.startsWith('/') && !/^\/(画|draw|img)/i.test(input) && (
               <ChatPrompts onChange={setInput} filter={input.slice(1)} />
             )}
 
@@ -177,13 +176,17 @@ export function ChatPanel({
             <div className="body-1 bottom-bar">
               <div className="action-button">
                 <ChatImage uploadImage={uploadImage}>
-                  <SVG className="cursor-pointer" src={VisualSearchIcon} width={20} />
+                  <VisualSearchIcon className="cursor-pointer" width={20} fill="var(--cib-color-foreground-neutral-primary)" />
                 </ChatImage>
               </div>
               <div className="flex gap-2 items-center">
                 <div className="letter-counter"><span>{input.length}</span>/8000</div>
                 <button type="submit" className="action-button" onClick={onSend}>
-                  <SVG alt="send" src={input.length ? SendFillIcon : SendIcon} width={18} height={20} />
+                  {input.length ? (
+                    <SendFillIcon width={18} height={20} fill="var(--cib-color-foreground-neutral-primary)" />
+                  ) : (
+                    <SendIcon width={18} height={20} fill="var(--cib-color-foreground-neutral-primary)" />
+                  )}
                 </button>
               </div>
             </div>

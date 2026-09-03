@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react'
 import { atom, useAtom } from 'jotai'
-import HelpIcon from '@/assets/images/help.svg'
-import DismissFillIcon from '@/assets/images/dismiss-fill.svg'
+import HelpIcon from '@/assets/images/help.svg?react'
+import DismissFillIcon from '@/assets/images/dismiss-fill.svg?react'
 import { SuggestedResponse } from '@/lib/bots/bing/types'
 import { BingReturnType } from '@/lib/hooks/use-bing'
-import { SVG } from './ui/svg'
 
 type Suggestions = SuggestedResponse[]
 const helpSuggestions = ['为什么不回应某些主题', '告诉我更多关于必应的资迅', '必应如何使用 AI?'].map((text) => ({ text }))
@@ -36,7 +35,11 @@ export function ChatSuggestions({ setInput, suggestions = [] }: ChatSuggestionsP
     <div className="py-6">
       <div className="suggestion-items">
         <button className="rai-button" type="button" aria-label="这是什么?" onClick={toggleSuggestions}>
-          <SVG alt="help" src={currentSuggestions === helpSuggestions ? DismissFillIcon : HelpIcon} width={24} />
+          {currentSuggestions === helpSuggestions ? (
+            <DismissFillIcon width={24} fill="var(--cib-color-foreground-accent-primary)" />
+          ) : (
+            <HelpIcon width={24} fill="var(--cib-color-foreground-accent-primary)" />
+          )}
         </button>
         {
           currentSuggestions.map(suggestion => (

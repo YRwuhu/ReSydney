@@ -669,6 +669,14 @@ body {
     }
   }
 
+  &.bot {
+    img {
+      max-width: 220px;
+      max-height: 220px;
+      object-fit: cover;
+    }
+  }
+
   a {
     position: relative;
     text-decoration: none;
@@ -2298,6 +2306,7 @@ button {
 
 /* ========== 2024 BingAI 页脚（还原自 mscopliot2024.html） ========== */
 /* 固定页脚栏：位于输入框下方、视口最底部（还原 2024 布局：输入框在上、页脚在下） */
+/* 背景透明：与 .global-background 同色，深浅色/各对话样式下均与页面融为一体 */
 .b_footer {
   position: fixed;
   bottom: 0;
@@ -2310,12 +2319,11 @@ button {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  background: var(--cib-color-background-surface-solid-base);
+  background: transparent;
   color: var(--cib-color-foreground-neutral-secondary);
   font-family: var(--cib-font-text);
   font-size: 12px;
   line-height: 16px;
-  border-top: 1px solid var(--cib-color-stroke-neutral-primary);
 
   a,
   a:visited {
@@ -2365,3 +2373,14 @@ button {
 }
 
 @import './dark.scss';
+
+/* 隐藏全局滚动条（保留滚动功能，界面更接近原生桌面应用） */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE / Edge 旧版 */
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}

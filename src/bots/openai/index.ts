@@ -11,6 +11,7 @@ import {
   SearchResult,
 } from './search'
 import { openaiChatOnce, openaiStream, webSearch, onChatEvent } from '@/lib/bridge'
+import { extractDrawPrompt, runDrawTool } from '@/lib/bots/bing/draw'
 
 /** OpenAI 兼容接口的图片内容部件（视觉模型用） */
 type ContentPart =
@@ -102,6 +103,16 @@ export class OpenAIBot implements ChatBot {
   }
 
   async sendMessage(params: SendMessageParams<any>) {
+    // AI 画图工具：命中"画图"意图时直接走 Bing 图像生成，与是否配置 OpenAI 接口无关
+    const drawPrompt = extractDrawPrompt(params.prompt)
+    if (drawPrompt && !params.imageUrl) {
+      return runDrawTool({
+        prompt: drawPrompt,
+        signal: params.signal,
+        onEvent: params.onEvent,
+      })
+    }
+
     const config = this.resolveConfig()
     if (!config.baseURL || !config.apiKey || !config.model) {
       params.onEvent({

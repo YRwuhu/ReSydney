@@ -1,7 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,29 +9,16 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { IconExternalLink, IconGitHub } from '@/components/ui/icons'
-import SettingIcon from '@/assets/images/settings.svg'
-import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
-import { SVG } from './ui/svg'
+import SettingIcon from '@/assets/images/settings.svg?react'
 
 export function UserMenu() {
-  const [host, setHost] = useState('')
-  const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 })
-  useEffect(() => {
-    setHost(location.host)
-  }, [])
-
-  useEffect(() => {
-    if (isCopied) {
-      toast.success('复制成功')
-    }
-  }, [isCopied])
   return (
     <div className="flex items-center justify-between">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button className="pl-0" variant="secondary">
             <div className="flex items-center justify-center text-xs font-medium uppercase rounded-full select-none h-7 w-7 shrink-0 bg-muted/50 text-muted-foreground">
-              <SVG alt="settings" src={SettingIcon} width={20} />
+              <SettingIcon width={20} fill="var(--cib-color-foreground-neutral-primary)" />
             </div>
             <span className="ml-2">设置</span>
           </Button>
@@ -113,13 +98,6 @@ export function UserMenu() {
               <IconGitHub />
               <IconExternalLink className="w-3 h-3 ml-auto" />
             </a>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="flex-col items-start">
-            <div className="font-medium">站点域名</div>
-            <div onClick={() => copyToClipboard(host)} className="flex gap-1 text-xs text-zinc-500 cursor-pointer">
-              {host} <IconExternalLink className="w-3 h-3" />
-            </div>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
