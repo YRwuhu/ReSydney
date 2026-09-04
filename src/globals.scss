@@ -2308,7 +2308,8 @@ button {
 
 /* ========== 2024 BingAI 页脚（还原自 mscopliot2024.html） ========== */
 /* 固定页脚栏：位于输入框下方、视口最底部（还原 2024 布局：输入框在上、页脚在下） */
-/* 背景透明：与 .global-background 同色，深浅色/各对话样式下均与页面融为一体 */
+/* 背景透明 + 高斯模糊：与 .global-background 同色，深浅色/各对话样式下均与页面融为一体；
+   滚动时从底栏下方经过的消息内容被模糊，形成毛玻璃效果 */
 .b_footer {
   position: fixed;
   bottom: 0;
@@ -2322,6 +2323,8 @@ button {
   justify-content: center;
   box-sizing: border-box;
   background: transparent;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   color: var(--cib-color-foreground-neutral-secondary);
   font-family: var(--cib-font-text);
   font-size: 12px;
