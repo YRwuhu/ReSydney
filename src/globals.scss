@@ -659,7 +659,7 @@ body {
     animation-name: message-enter;
     animation-fill-mode: both;
     animation-duration: 633ms;
-    animation-delay: 1000ms;
+    animation-delay: 0ms;
   }
 
   &.user {
@@ -684,14 +684,15 @@ body {
   }
 }
 
-/* 多卡模式（每句话一张回复卡）：去掉每卡的入场动画，用 flex gap 控制卡片间距 */
+/* 多卡模式（每句话一张回复卡）：保留首卡入场动画（由小变大），用 flex gap 控制卡片间距 */
 .reply-card-stack {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.reply-card-stack .text-message.bot {
+/* 流式输出过程中，后追加的卡片不再重复触发入场动画，避免频繁跳动 */
+.reply-card-stack .text-message.bot:not(:first-child) {
   animation: none;
   opacity: 1;
 }

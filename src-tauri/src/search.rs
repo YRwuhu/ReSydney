@@ -1,7 +1,6 @@
 //! 网络搜索：free（抓取必应结果页）/ Serper / Tavily，附正文提取。
 //! 由 TS 版 src/pages/api/search.ts 移植。
 
-use base64::Engine;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, USER_AGENT};
 use serde::{Deserialize, Serialize};
 
@@ -14,6 +13,9 @@ pub struct SearchResult {
 }
 
 const UA: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0";
+// 移动版 UA：请求 cn.bing.com 移动布局，结果直接携带真实链接，
+// 避免桌面版把所有结果包成 bing.com/ck/a JS 混淆跳转导致解析失败、全部被过滤。
+const MOBILE_UA: &str = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1";
 const READ_TIMEOUT_MS: u64 = 8000;
 const CONTENT_MAX: usize = 3000;
 
@@ -30,12 +32,12 @@ fn strip_html(html: &str) -> String {
     re_space.replace_all(&text, " ").trim().to_string()
 }
 
-/// 免费模式：抓取必应搜索结果页并解析 <li class="b_algo"> 条目。
+/// 免费模式：抓取必应搜索结果页（移动版布局，结果含真实链接）并解析条目。
 async fn fetch_bing(client: &reqwest::Client, q: &str) -> Result<Vec<SearchResult>, String> {
-    let url = format!("https://www.bing.com/search?q={}&mkt=zh-CN&setlang=zh-CN&count=8&ensearch=1", urlencoding(q));
+    let url = format!("https://cn.bing.com/search?q={}&mkt=zh-CN&setlang=zh-CN", urlencoding(q));
     let resp = client
         .get(&url)
-        .header(USER_AGENT, UA)
+        .header(USER_AGENT, MOBILE_UA)
         .header("Accept-Language", "zh-CN,zh;q=0.9")
         .header("Accept", "text/html,*/*")
         .send()
@@ -53,23 +55,31 @@ fn urlencoding(s: &str) -> String {
 fn parse_bing_results(html: &str) -> Vec<SearchResult> {
     let mut out = Vec::new();
     let re = regex::Regex::new(r#"(?is)<li class="b_algo"[\s\S]*?</li>"#).unwrap();
+    // 移动版标题：<div class="b_algoheader"><a href="真实URL" ...><h2>标题</h2></a></div>
+    let re_mobile = regex::Regex::new(r#"(?is)<div class="b_algoheader"[^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>[\s\S]*?<h2[^>]*>([\s\S]*?)</h2>"#).unwrap();
+    // 桌面版标题：<h2><a href="真实URL" ...>标题</a></h2>
+    let re_desktop = regex::Regex::new(r#"(?is)<h2[^>]*><a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)</a>"#).unwrap();
+    // 摘要：移动版 <div class="b_caption"><p>…</p></div>，桌面版 <p class="b_caption">…</p>
+    let re_caption = regex::Regex::new(r#"(?is)<(?:p|div) class="b_caption"[^>]*>([\s\S]*?)</(?:p|div)>"#).unwrap();
     for cap in re.captures_iter(html) {
         let block = &cap[0];
-        let re_h2 = regex::Regex::new(r#"(?is)<h2[^>]*><a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)</a>"#).unwrap();
-        let Some(h2) = re_h2.captures(block) else { continue };
-        let mut href = h2[1].to_string();
-        if href.contains("bing.com") && !href.contains("bing.com/images") {
-            // 需要解析真实 URL,下面统一处理
+        let (raw_href, title_html) = if let Some(m) = re_mobile.captures(block) {
+            (m[1].to_string(), m[2].to_string())
+        } else if let Some(m) = re_desktop.captures(block) {
+            (m[1].to_string(), m[2].to_string())
+        } else {
+            continue;
+        };
+        // 跳过必应站内图片等非结果链接
+        if raw_href.contains("bing.com/images") {
+            continue;
         }
-        let title = strip_html(&h2[2]);
-        let re_caption = regex::Regex::new(r#"(?is)<p class="b_caption"[^>]*>([\s\S]*?)</p>"#).unwrap();
-        let re_caption2 = regex::Regex::new(r#"(?is)<div class="b_caption"[^>]*>([\s\S]*?)</div>"#).unwrap();
+        let title = strip_html(&title_html);
         let snippet = re_caption
             .captures(block)
-            .or_else(|| re_caption2.captures(block))
             .map(|c| strip_html(&c[1]))
             .unwrap_or_default();
-        href = normalize_url(&href);
+        let href = normalize_url(&raw_href);
         if href.is_empty() || title.is_empty() {
             continue;
         }
@@ -84,36 +94,6 @@ fn parse_bing_results(html: &str) -> Vec<SearchResult> {
         });
     }
     out
-}
-
-async fn resolve_real_url(client: &reqwest::Client, url: &str) -> String {
-    let resp = match client
-        .get(url)
-        .header(USER_AGENT, UA)
-        .header("Accept-Language", "zh-CN,zh;q=0.9")
-        .send()
-        .await
-    {
-        Ok(r) => r,
-        Err(_) => return url.to_string(),
-    };
-    let final_url = resp.url().as_str().to_string();
-    if !final_url.contains("bing.com") {
-        return final_url;
-    }
-    let body = resp.text().await.unwrap_or_default();
-    let re_u = regex::Regex::new(r#"var u\s*=\s*"([^"]+)""#).unwrap();
-    if let Some(c) = re_u.captures(&body) {
-        let decoded = base64::engine::general_purpose::URL_SAFE_NO_PAD
-            .decode(c[1].trim_matches(char::from(0)))
-            .ok();
-        if let Some(bytes) = decoded {
-            if let Ok(s) = String::from_utf8(bytes) {
-                return s;
-            }
-        }
-    }
-    url.to_string()
 }
 
 async fn fetch_page_content(client: &reqwest::Client, url: &str) -> Option<String> {
@@ -231,27 +211,9 @@ pub async fn search(
                 .collect()
         }
         _ => {
+            // 移动版必应结果已携带真实链接（无 ck/a 混淆），直接取前 6 条
             let results = fetch_bing(&client, query).await?;
-            // 解析 bing ck/a 重定向为真实 URL
-            let mut resolved = Vec::new();
-            for r in results {
-                let final_url = if r.url.contains("/ck/a?mkt=") || r.url.contains("bing.com/ck/a") {
-                    resolve_real_url(&client, &r.url).await
-                } else {
-                    r.url.clone()
-                };
-                if final_url.contains("bing.com") && !final_url.contains("/images/") {
-                    continue;
-                }
-                resolved.push(SearchResult {
-                    url: final_url,
-                    ..r
-                });
-                if resolved.len() >= 6 {
-                    break;
-                }
-            }
-            resolved
+            results.into_iter().take(6).collect()
         }
     };
 
