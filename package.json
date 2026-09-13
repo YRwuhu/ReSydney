@@ -1,7 +1,7 @@
 {
   "name": "resydney",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "ReSydney - Rust+Tauri 桌面版（本地单机，无登录）",
   "scripts": {
