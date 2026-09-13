@@ -365,17 +365,18 @@
   background: #ebf5f2;
 }
 
-/* 输入框底部渐隐遮罩也要跟对话样式同色，否则会盖住淡色背景 */
+/* 输入框底部渐隐遮罩不再铺不透明底色：底色会盖住 .action-bar::before 那层
+   高斯模糊，导致毛玻璃效果看不见 */
 .creative .fade.bottom .background {
-  background: #f5f0f9;
+  background: transparent;
 }
 
 .balanced .fade.bottom .background {
-  background: #edf3fc;
+  background: transparent;
 }
 
 .precise .fade.bottom .background {
-  background: #ebf5f2;
+  background: transparent;
 }
 
 .bg-background {
@@ -1235,6 +1236,25 @@ button {
   transition-property: transform, max-width, min-width;
   transition-duration: var(--cib-motion-duration-slowest);
   transition-timing-function: var(--cib-motion-easing-transition);
+
+  /* 底栏毛玻璃层：铺满整条底栏（含 pb-4 内边距），高度随输入框自动增长，
+     使高斯模糊范围从视口最底部一直延伸到输入框那一档高度（输入框变高时同步上移）。
+     - 向下延伸 48px 正好接到视口底部（.action-bar 自身 bottom: 48px），
+       这样页脚栏与输入框共用同一层模糊，中间不会留出没被模糊的缝；
+     - 上探 24px 作为渐隐过渡区，避免模糊区上沿出现硬边。 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -24px;
+    left: 0;
+    right: 0;
+    bottom: -48px;
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 24px);
+    mask-image: linear-gradient(to bottom, transparent, black 24px);
+    pointer-events: none;
+  }
 }
 
 .action-root {
@@ -1829,7 +1849,9 @@ button {
     transition-property: transform;
     transition-duration: var(--cib-motion-duration-slowest);
     transition-timing-function: var(--cib-motion-easing-transition);
-    background: var(--cib-bing-chat-background);
+    /* 透明：底栏毛玻璃改由 .action-bar::before 承担，
+       不透明底色会把那层 backdrop-filter 的模糊结果盖住 */
+    background: transparent;
   }
 }
 
@@ -1854,21 +1876,6 @@ button {
     position: absolute;
     top: 0px;
     inset-inline-start: 0px;
-  }
-}
-
-/* 移动端：隐藏页脚栏，输入框回到视口最底部 */
-@media (max-width: 767px) {
-  .b_footer {
-    display: none;
-  }
-
-  .action-bar {
-    bottom: 0;
-  }
-
-  .fade.bottom {
-    bottom: 0;
   }
 }
 
@@ -2308,8 +2315,10 @@ button {
 
 /* ========== 2024 BingAI 页脚（还原自 mscopliot2024.html） ========== */
 /* 固定页脚栏：位于输入框下方、视口最底部（还原 2024 布局：输入框在上、页脚在下） */
-/* 背景透明 + 高斯模糊：与 .global-background 同色，深浅色/各对话样式下均与页面融为一体；
-   滚动时从底栏下方经过的消息内容被模糊，形成毛玻璃效果 */
+/* 背景透明、自身不做模糊：底栏毛玻璃统一由 .action-bar::before 那一层负责
+   （它从视口底部一直铺到输入框之上）。若这里再叠一层 backdrop-filter，
+   两层之间会因高度对不齐（页脚 44px vs .action-bar bottom 48px）露出没被模糊的缝，
+   重叠处还会被模糊两次。 */
 .b_footer {
   position: fixed;
   bottom: 0;
@@ -2323,8 +2332,6 @@ button {
   justify-content: center;
   box-sizing: border-box;
   background: transparent;
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
   color: var(--cib-color-foreground-neutral-secondary);
   font-family: var(--cib-font-text);
   font-size: 12px;
@@ -2375,6 +2382,28 @@ button {
 .b_footerLogo {
   display: inline-block;
   flex-shrink: 0;
+}
+
+/* 移动端：隐藏页脚栏，输入框回到视口最底部。
+   必须放在 .b_footer 定义之后——同为 0,1,0 特异性，靠源码顺序取胜，
+   否则 .b_footer{display:flex} 会把它覆盖掉，页脚栏会压在输入框上。 */
+@media (max-width: 767px) {
+  .b_footer {
+    display: none;
+  }
+
+  .action-bar {
+    bottom: 0;
+
+    /* 输入框已贴到视口底部，毛玻璃层不需要再向下延伸 */
+    &::before {
+      bottom: 0;
+    }
+  }
+
+  .fade.bottom {
+    bottom: 0;
+  }
 }
 
 @import './dark.scss';

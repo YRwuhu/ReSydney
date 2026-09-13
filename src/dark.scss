@@ -309,6 +309,7 @@
 
   .dark .fade.bottom {
     .background {
-      background: var(--cib-bing-chat-background);
+      /* 深色下同样不铺底色，保留 backdrop-filter 的高斯模糊 */
+      background: transparent;
     }
   }
