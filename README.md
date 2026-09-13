@@ -15,21 +15,23 @@ Rust + Tauri 桌面版 Bing Copilot（New Bing / Sydney）本地重制客户端�
 
 ---
 
-## 默认配置（.env）
+## 默认配置
 
-在仓库根目录新建 `.env.local` 可设置**默认**配置，当用户没有在网页端「设置」中单独配置时生效。
+首次运行（还没保存过配置）时，「设置 → AI 接口设置」里的 `baseURL / apiKey / model` 使用内置默认值，
+定义在 [`src/state/openai.ts`](./src/state/openai.ts)：
 
-```bash
-# 文档地址：见下方「如何获取 BING_HEADER」章节
-BING_HEADER=
+| 常量 | 默认值 |
+|---|---|
+| `DEFAULT_OPENAI_BASE_URL` | `https://api.deepseek.com` |
+| `DEFAULT_OPENAI_API_KEY` | 空（需自行填写） |
+| `DEFAULT_OPENAI_MODEL` | `deepseek-flash` |
 
-# 自定义 AI 接口（OpenAI 兼容格式）的默认配置
-NEXT_PUBLIC_OPENAI_API_URL=https://api.deepseek.com
-NEXT_PUBLIC_OPENAI_API_KEY=
-NEXT_PUBLIC_OPENAI_MODEL=deepseek-chat
-```
+在界面上保存过之后，配置会持久化到本地 SQLite（Rust 端 rusqlite），下次启动自动恢复，不再取上面的默认值。
 
-> `BING_HEADER` 只接受 base64 后的字符串（具体获取方式见下文）。配置文件 `.env.local` 已被 `.gitignore` 忽略，请勿提交真实密钥。
+> 改默认值直接改这几个常量，然后重新 `tauri build`。前端资源是**编译期**嵌进 exe 的（`tauri.conf.json` 的
+> `build.frontendDist`），所以只跑 `npm run build` 不会影响已安装的程序。
+
+> `BING_HEADER` 只接受 base64 后的字符串，获取方式见下方「如何获取 BING_HEADER」章节。
 
 ## 本地开发
 

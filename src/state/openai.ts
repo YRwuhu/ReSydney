@@ -56,9 +56,9 @@ export const DEFAULT_STYLE_MODEL_PARAMS: StyleModelParamsMap = {
 /** 搜索提供方：serper/tavily 需各自填 Key；free 为无需 Key 的本地抓取（Bing） */
 export type SearchProvider = 'free' | 'serper' | 'tavily'
 
-export const DEFAULT_OPENAI_BASE_URL = 'https://api.openai.com/v1'
+export const DEFAULT_OPENAI_BASE_URL = 'https://api.deepseek.com'
 export const DEFAULT_OPENAI_API_KEY = ''
-export const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini'
+export const DEFAULT_OPENAI_MODEL = 'deepseek-flash'
 
 export const defaultOpenAIConfig: OpenAIConfig = {
   baseURL: DEFAULT_OPENAI_BASE_URL,

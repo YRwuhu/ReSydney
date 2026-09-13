@@ -227,7 +227,7 @@ export function Settings() {
           <div className="flex flex-col gap-3">
             <Input
               value={openAIConfig.baseURL}
-              placeholder="接口地址，如 https://api.openai.com/v1"
+              placeholder="接口地址，如 https://api.deepseek.com"
               onChange={e => setOpenAIConfig({ ...openAIConfig, baseURL: e.target.value })}
             />
             <Input
@@ -238,7 +238,7 @@ export function Settings() {
             />
             <Input
               value={openAIConfig.model}
-              placeholder="模型名称，如 gpt-4o-mini / deepseek-chat"
+              placeholder="模型名称，如 deepseek-flash / deepseek-chat"
               onChange={e => setOpenAIConfig({ ...openAIConfig, model: e.target.value })}
             />
           </div>
